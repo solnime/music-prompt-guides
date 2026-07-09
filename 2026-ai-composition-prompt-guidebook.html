@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 AI 작곡 프롬프트 가이드북</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a26;
+  --accent1: #c084fc;
+  --accent2: #f0abfc;
+  --accent3: #22d3ee;
+  --accent4: #fb923c;
+  --green: #4ade80;
+  --red: #f87171;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --border: rgba(192,132,252,0.2);
+  --glow: 0 0 30px rgba(192,132,252,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans KR','Noto Sans JP',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.8;
+  overflow-x:hidden;
+}
+body.ja{font-family:'Noto Sans JP','Noto Sans KR',sans-serif}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--accent1);border-radius:3px}
+
+/* ── noise overlay ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.4;
+}
+
+/* ── LANG SWITCH ── */
+.lang-switch{
+  position:fixed;top:16px;right:16px;z-index:10000;
+  display:flex;gap:8px;
+  background:rgba(18,18,26,.85);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--border);
+  border-radius:100px;padding:6px 10px;
+}
+.lang-btn{
+  background:transparent;border:2px solid transparent;
+  font-size:1.5rem;line-height:1;
+  cursor:pointer;border-radius:50%;
+  padding:4px;opacity:.45;
+  transition:all .25s ease;
+  filter:grayscale(.6);
+}
+.lang-btn:hover{opacity:.8;filter:grayscale(0)}
+.lang-btn.active{
+  opacity:1;filter:grayscale(0);
+  border-color:var(--accent1);
+  box-shadow:0 0 12px rgba(192,132,252,.5);
+  transform:scale(1.08);
+}
+
+/* ── LANG CONTENT ── */
+#content-ja{display:none}
+body.ja #content-ko{display:none}
+body.ja #content-ja{display:block}
+
+/* ── COVER ── */
+.cover{
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(192,132,252,.15) 0%, transparent 60%),
+             radial-gradient(ellipse 60% 40% at 80% 80%, rgba(34,211,238,.08) 0%, transparent 50%),
+             var(--bg);
+  padding:60px 20px;
+  text-align:center;
+}
+.cover-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(192,132,252,.06) 1px, transparent 1px),
+                   linear-gradient(90deg, rgba(192,132,252,.06) 1px, transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 70%);
+}
+.cover-eyebrow{
+  font-family:'Space Mono',monospace;
+  font-size:.75rem;letter-spacing:.3em;
+  color:var(--accent3);text-transform:uppercase;
+  border:1px solid rgba(34,211,238,.3);
+  padding:6px 18px;border-radius:100px;
+  margin-bottom:32px;
+  animation:fadeUp .8s ease both;
+}
+.cover h1{
+  font-family:'Bebas Neue','Noto Sans KR','Noto Sans JP',sans-serif;
+  font-size:clamp(3rem,10vw,7.5rem);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  background:linear-gradient(135deg, #fff 0%, var(--accent1) 50%, var(--accent3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:fadeUp .8s .1s ease both;
+}
+.cover-sub{
+  font-size:1.1rem;color:var(--text2);
+  margin-top:20px;
+  animation:fadeUp .8s .2s ease both;
+}
+.cover-icons{
+  font-size:2.5rem;margin-top:40px;letter-spacing:8px;
+  animation:fadeUp .8s .3s ease both;
+  filter:drop-shadow(0 0 20px rgba(192,132,252,.5));
+}
+.cover-date{
+  font-family:'Space Mono',monospace;
+  font-size:.8rem;color:var(--text2);
+  margin-top:20px;
+  animation:fadeUp .8s .4s ease both;
+}
+.cover-scroll{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  animation:fadeUp .8s .6s ease both;
+}
+.cover-scroll span{font-size:.7rem;letter-spacing:.2em;color:var(--text2)}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--accent1),transparent);animation:scrollPulse 2s ease infinite}
+
+/* ── LAYOUT ── */
+.main{max-width:860px;margin:0 auto;padding:0 24px 120px}
+
+/* ── TOC ── */
+.toc-wrap{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:40px;margin:60px 0;
+  position:relative;overflow:hidden;
+}
+.toc-wrap::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent1),transparent);
+}
+.toc-title{
+  font-family:'Bebas Neue','Noto Sans KR','Noto Sans JP',sans-serif;
+  font-size:2.2rem;letter-spacing:.05em;
+  color:var(--accent1);margin-bottom:28px;
+}
+.toc-list{list-style:none}
+.toc-list > li{
+  padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);
+  display:flex;align-items:flex-start;gap:14px;
+  font-size:.95rem;
+}
+.toc-list > li:last-child{border-bottom:none}
+.toc-num{
+  font-family:'Space Mono',monospace;font-size:.75rem;
+  color:var(--accent1);background:rgba(192,132,252,.1);
+  border:1px solid rgba(192,132,252,.2);
+  border-radius:4px;padding:2px 8px;flex-shrink:0;margin-top:2px;
+}
+.toc-sub{margin-top:10px;padding-left:12px;list-style:none;display:flex;flex-direction:column;gap:6px}
+.toc-sub li{font-size:.85rem;color:var(--text2);display:flex;align-items:center;gap:8px}
+.toc-sub li::before{content:'—';color:var(--accent1);flex-shrink:0}
+.badge{
+  background:linear-gradient(135deg,#ef4444,#f97316);
+  color:white;font-size:.65rem;font-weight:700;
+  padding:2px 8px;border-radius:100px;letter-spacing:.05em;flex-shrink:0;
+}
+
+/* ── CHAPTER ── */
+.chapter{margin-bottom:80px}
+.chapter-header{
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:40px;padding-bottom:20px;
+  border-bottom:1px solid var(--border);
+}
+.chapter-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:4rem;line-height:1;
+  color:rgba(192,132,252,.2);flex-shrink:0;
+}
+.chapter-title{
+  font-family:'Bebas Neue','Noto Sans KR','Noto Sans JP',sans-serif;
+  font-weight:900;
+  font-size:clamp(1.8rem,5vw,2.8rem);
+  letter-spacing:.03em;
+  background:linear-gradient(135deg,var(--text),var(--accent1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+/* ── SECTION ── */
+.section{margin-bottom:50px}
+.section-title{
+  font-size:1.3rem;font-weight:700;color:var(--accent2);
+  margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.section-title .icon{font-size:1.2rem}
+.subsection-title{
+  font-size:1.1rem;font-weight:700;color:var(--text);
+  margin:28px 0 14px;display:flex;align-items:center;gap:8px;
+}
+.subsection-title::before{content:'';width:4px;height:1em;background:var(--accent1);border-radius:2px}
+
+/* ── BOXES ── */
+.box{
+  border-radius:12px;padding:20px 24px;margin:16px 0;
+  border:1px solid transparent;
+}
+.box-info{background:rgba(34,211,238,.05);border-color:rgba(34,211,238,.2)}
+.box-tip{background:rgba(251,146,60,.05);border-color:rgba(251,146,60,.2)}
+.box-warning{background:rgba(248,113,113,.05);border-color:rgba(248,113,113,.2)}
+.box-success{background:rgba(74,222,128,.05);border-color:rgba(74,222,128,.2)}
+.box h4{font-size:.85rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}
+.box-info h4{color:var(--accent3)}
+.box-tip h4{color:var(--accent4)}
+.box-warning h4{color:var(--red)}
+.box-success h4{color:var(--green)}
+
+/* ── PROMPT BLOCK ── */
+.prompt-block{
+  background:#0d0d15;
+  border:1px solid rgba(192,132,252,.25);
+  border-radius:10px;padding:18px 20px;margin:14px 0;
+  font-family:'Space Mono',monospace;font-size:.82rem;
+  color:#c084fc;line-height:1.8;position:relative;
+  overflow-x:auto;
+}
+.prompt-block::before{
+  content:'PROMPT';
+  position:absolute;top:8px;right:12px;
+  font-size:.6rem;letter-spacing:.15em;color:rgba(192,132,252,.35);
+}
+.prompt-block strong{color:var(--accent3);font-style:normal}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{
+  background:rgba(192,132,252,.12);
+  color:var(--accent1);font-weight:700;
+  padding:14px 16px;text-align:left;
+  border-bottom:1px solid var(--border);
+  font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;
+}
+td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text2)}
+tr:hover td{background:rgba(192,132,252,.03)}
+td strong{color:var(--text)}
+
+/* ── COMPARISON ── */
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:600px){.comparison{grid-template-columns:1fr}}
+.cmp-bad,.cmp-good{padding:20px;border-radius:12px}
+.cmp-bad{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2)}
+.cmp-good{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2)}
+.cmp-label{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.cmp-bad .cmp-label{color:var(--red)}
+.cmp-good .cmp-label{color:var(--green)}
+.cmp-note{font-size:.82rem;color:var(--text2);margin-top:10px}
+
+/* ── GENRE CARD ── */
+.genre-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:20px;padding:36px;margin:24px 0;
+  position:relative;overflow:hidden;
+}
+.genre-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent1),var(--accent3));
+}
+.genre-card-title{
+  font-family:'Bebas Neue','Noto Sans KR','Noto Sans JP',sans-serif;
+  font-weight:900;
+  font-size:1.9rem;letter-spacing:.05em;
+  display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap;
+}
+.genre-card-desc{font-size:.9rem;color:var(--text2);margin-bottom:24px}
+.genre-example{
+  background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;padding:20px;margin:14px 0;
+}
+.genre-example h4{font-size:.9rem;font-weight:700;color:var(--accent2);margin-bottom:12px}
+.genre-code{
+  font-family:'Space Mono',monospace;font-size:.78rem;
+  color:var(--accent1);background:rgba(0,0,0,.4);
+  border:1px solid rgba(192,132,252,.15);
+  border-radius:8px;padding:14px 16px;line-height:1.8;
+}
+.genre-meta{font-size:.8rem;color:var(--text2);margin-top:10px;line-height:1.7}
+.genre-meta strong{color:var(--text)}
+
+/* ── CHECKLIST ── */
+.checklist{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:20px 24px;margin:16px 0;
+}
+.checklist h4{font-size:.85rem;font-weight:700;color:var(--accent1);margin-bottom:14px;letter-spacing:.05em;text-transform:uppercase}
+.checklist ul{list-style:none}
+.checklist li{
+  padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:.9rem;display:flex;align-items:flex-start;gap:12px;color:var(--text2);
+}
+.checklist li:last-child{border-bottom:none}
+.checklist li::before{
+  content:'□';font-size:1.1rem;color:var(--accent1);flex-shrink:0;
+}
+.checklist li strong{color:var(--text)}
+
+/* ── EXERCISE ── */
+.exercise{
+  background:rgba(251,146,60,.05);
+  border:1px solid rgba(251,146,60,.2);
+  border-radius:12px;padding:24px;margin:16px 0;
+}
+.exercise h4{color:var(--accent4);font-size:.9rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:14px}
+.exercise ol{padding-left:20px;color:var(--text2);font-size:.9rem}
+.exercise li{padding:5px 0}
+
+/* ── LYRICS BLOCK ── */
+.lyrics-block{
+  background:#0a0a0f;border:1px solid rgba(240,171,252,.15);
+  border-radius:12px;padding:28px;margin:16px 0;
+  font-family:'Space Mono','Noto Sans KR','Noto Sans JP',monospace;font-size:.8rem;
+  color:var(--text2);line-height:2.2;
+  white-space:pre-wrap;
+}
+.lyrics-tag{color:var(--accent1);font-weight:700}
+
+/* ── GRID 2 ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+
+/* ── TIP ITEM ── */
+.tip-item{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:20px;margin:12px 0;
+}
+.tip-item h4{color:var(--accent4);font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.tip-item p,.tip-item ul{color:var(--text2);font-size:.9rem}
+.tip-item ul{padding-left:16px}
+.tip-item li{padding:3px 0}
+
+/* ── FAQ ── */
+.faq-item{
+  border-bottom:1px solid var(--border);padding:20px 0;
+}
+.faq-q{color:var(--text);font-weight:700;margin-bottom:10px;font-size:.95rem}
+.faq-q::before{content:'Q. ';color:var(--accent3)}
+.faq-a{color:var(--text2);font-size:.9rem}
+.faq-a::before{content:'A. ';color:var(--accent1);font-weight:700}
+
+/* ── FOOTER ── */
+.footer{
+  text-align:center;padding:60px 20px;border-top:1px solid var(--border);
+  background:radial-gradient(ellipse 60% 50% at 50% 100%,rgba(192,132,252,.07) 0%,transparent 60%);
+}
+.footer p{color:var(--text2);font-size:.85rem;margin:6px 0}
+.footer a{color:var(--accent1);text-decoration:none}
+.footer a:hover{text-decoration:underline}
+.footer-title{color:var(--accent1);font-family:'Bebas Neue','Noto Sans KR','Noto Sans JP',sans-serif;font-weight:900;font-size:1.4rem;letter-spacing:.1em;margin-bottom:12px}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scrollPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ── NEW BADGE ── */
+.new-badge{
+  background:linear-gradient(135deg,#ef4444,#f97316);
+  color:white;font-size:.65rem;font-weight:700;
+  padding:2px 9px;border-radius:100px;
+  vertical-align:middle;margin-left:8px;
+  letter-spacing:.05em;text-transform:uppercase;
+}
+code{
+  font-family:'Space Mono',monospace;font-size:.82rem;
+  background:rgba(192,132,252,.1);color:var(--accent1);
+  padding:2px 7px;border-radius:4px;
+}
+
+/* ── WEEK TABLE ── */
+.week-row td:first-child{color:var(--accent1);font-weight:700;font-family:'Space Mono',monospace;font-size:.85rem}
+
+/* ── SYSTEM FONT OVERRIDES (외부 폰트 제거 대응) ── */
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif}
+body.ja{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+.cover-eyebrow,.cover-date,.toc-num,.prompt-block,.genre-code,code,
+.week-row td:first-child{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+.lyrics-block{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Apple SD Gothic Neo","Hiragino Kaku Gothic ProN",monospace,sans-serif}
+.cover h1,.toc-title,.chapter-num,.chapter-title,.genre-card-title,
+.footer-title{font-family:"Arial Narrow","Helvetica Neue",Impact,-apple-system,"Segoe UI","Apple SD Gothic Neo","Hiragino Kaku Gothic ProN",sans-serif;font-weight:900}
+.cover h1{letter-spacing:.01em}
+.chapter-num{font-weight:800}
+</style>
+</head>
+<body>
+
+<!-- LANG SWITCH -->
+<div class="lang-switch">
+  <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')" title="한국어">🇰🇷</button>
+  <button class="lang-btn" id="btn-ja" onclick="setLang('ja')" title="日本語">🇯🇵</button>
+</div>
+
+<!-- ═══════════════════════ KOREAN VERSION ═══════════════════════ -->
+<div id="content-ko">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-eyebrow">2026 최신 개정판</div>
+  <h1>AI 작곡<br>프롬프트 가이드</h1>
+  <div class="cover-sub">장르별 프롬프트 모음집 — 누구나 만드는 AI 음악</div>
+  <div class="cover-icons">🎵 🎼 🎹 🎸 🎧</div>
+  <div class="cover-date">2026.03.20</div>
+  <div class="cover-scroll">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- TOC -->
+<div class="toc-wrap">
+  <div class="toc-title">📑 목차</div>
+  <ul class="toc-list">
+    <li><span class="toc-num">01</span><div>시작하기 전에 — AI 작곡 완전 정복</div></li>
+    <li><span class="toc-num">02</span><div>프롬프트 기초 다지기</div></li>
+    <li>
+      <span class="toc-num">03</span>
+      <div>
+        장르별 프롬프트 실습
+        <ul class="toc-sub">
+          <li>K-POP 스타일</li>
+          <li>EDM &amp; 일렉트로닉 스타일 <span class="badge">NEW</span></li>
+          <li>재즈 &amp; 블루스 스타일 <span class="badge">NEW</span></li>
+          <li>게임 &amp; 영화 OST <span class="badge">NEW</span></li>
+          <li>팝 &amp; 알앤비 / 힙합 / 인디 / 트로트</li>
+        </ul>
+      </div>
+    </li>
+    <li><span class="toc-num">04</span><div>가사 작성 완전 가이드</div></li>
+    <li><span class="toc-num">05</span><div>실전 활용 팁 &amp; 체크리스트</div></li>
+    <li><span class="toc-num">06</span><div>연습 과제 &amp; 참고 자료</div></li>
+  </ul>
+</div>
+
+
+<!-- ── CHAPTER 1 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">01</div>
+    <div class="chapter-title">시작하기 전에<br>AI 작곡 완전 정복</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🤔</span>1-1. AI 작곡이 뭔가요?</div>
+    <div class="box box-info"><h4>쉽게 설명</h4><p>글로 음악을 만드는 마법 같은 기술입니다!</p></div>
+    <div class="box box-success"><h4>누구나 할 수 있나요?</h4><p>✅ 네! 음악 지식이 전혀 없어도 됩니다. 타이핑만 할 수 있으면 OK!</p></div>
+    <div class="box box-tip"><h4>어떻게 작동하나요?</h4><p>여러분이 원하는 음악 스타일을 글로 설명 → AI가 자동으로 음악 생성</p></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🛠️</span>1-2. 2026년 인기 AI 작곡 도구</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>도구</th><th>추천 대상</th><th>장점</th><th>특징</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Suno v4.5</strong> ⭐⭐⭐⭐⭐</td><td>초보자</td><td>가장 쉬움, 한국어 지원, 무료 체험</td><td>Personas 기능으로 일관된 스타일 유지</td></tr>
+          <tr><td><strong>Udio</strong> ⭐⭐⭐⭐</td><td>중급자</td><td>정교한 컨트롤, 메이저 레이블 라이선싱</td><td>전문적인 사운드 품질</td></tr>
+          <tr><td><strong>ElevenLabs Music</strong> ⭐⭐⭐⭐</td><td>보컬 중시</td><td>음악 + 음성 통합 제작</td><td>감성적 보컬에 특화</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">📝</span>1-3. 프롬프트란?</div>
+    <div class="box box-info"><p><strong>정의:</strong> AI에게 어떤 음악을 만들어달라고 설명하는 문장</p></div>
+    <div class="comparison">
+      <div class="cmp-bad">
+        <div class="cmp-label">❌ 나쁜 예</div>
+        <div class="prompt-block" style="margin:0">"좋은 노래 만들어줘"</div>
+        <div class="cmp-note">문제점: 너무 막연함</div>
+      </div>
+      <div class="cmp-good">
+        <div class="cmp-label">✅ 좋은 예</div>
+        <div class="prompt-block" style="margin:0">K-POP, female vocal, Electropop, BPM 125, catchy, Cheerful</div>
+        <div class="cmp-note">개선: 장르, 보컬, 템포 명확</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">💡</span>1-4. 이 가이드북 사용법</div>
+    <div class="checklist">
+      <ul>
+        <li><strong>Step 1:</strong> 원하는 장르 찾기</li>
+        <li><strong>Step 2:</strong> 기본 프롬프트 복사하기</li>
+        <li><strong>Step 3:</strong> 나만의 스타일로 변형하기</li>
+        <li><strong>Step 4:</strong> AI 도구에 입력하고 생성!</li>
+        <li><strong>Step 5:</strong> 결과 확인 후 프롬프트 수정</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 2 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">02</div>
+    <div class="chapter-title">프롬프트<br>기초 다지기</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎼</span>2-1. 프롬프트의 4가지 핵심 요소</div>
+    <div class="grid2">
+      <div class="box box-info"><h4>① 장르 (Genre)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">음악의 기본 스타일</p><div class="prompt-block" style="margin:0;font-size:.75rem">K-POP, Jazz, Rock, EDM, Ballad</div></div>
+      <div class="box box-info"><h4>② 분위기 (Mood)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">음악이 주는 느낌</p><div class="prompt-block" style="margin:0;font-size:.75rem">Cheerful, Dark, Dreamy, Energetic</div></div>
+      <div class="box box-info"><h4>③ 악기 (Instruments)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">사용할 악기</p><div class="prompt-block" style="margin:0;font-size:.75rem">piano, guitar, synth, drums, strings</div></div>
+      <div class="box box-info"><h4>④ 템포 (BPM)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">음악의 속도</p><div class="prompt-block" style="margin:0;font-size:.75rem">느림: 60-80<br>중간: 90-120<br>빠름: 130-180</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">✍️</span>2-2. 프롬프트 작성 공식</div>
+    <div class="box box-success">
+      <h4>기본 공식</h4>
+      <div class="prompt-block" style="color:var(--text);font-size:.9rem">[장르] + [보컬 타입] + [세부 장르] + [악기] + [분위기] + [BPM] + [특수 효과]</div>
+    </div>
+    <div class="box box-tip">
+      <h4>실전 예시</h4>
+      <div class="prompt-block">K-POP, female vocal, Electropop, synth, piano, Cheerful, Catchy, BPM 120</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">📚</span>2-3. 자주 쓰는 영어 표현 모음</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>카테고리</th><th>영어 표현</th></tr></thead>
+        <tbody>
+          <tr><td><strong>보컬</strong></td><td>female vocal, male vocal, mixed voices, powerful voice, soft voice</td></tr>
+          <tr><td><strong>분위기</strong></td><td>Cheerful, Melancholic, Energetic, Romantic, Dreamy, Dark, Bright, Chill</td></tr>
+          <tr><td><strong>음악 특성</strong></td><td>Catchy, Upbeat, Slow, Fast, Heavy, Light, Groovy, Smooth</td></tr>
+          <tr><td><strong>악기</strong></td><td>piano, guitar, synth, drums, bass, strings, brass, percussion</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">❌</span>2-4. 초보자가 자주 하는 실수</div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ 실수 1: 너무 간단</div><div class="prompt-block" style="margin:0">"신나는 노래"</div></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 개선</div><div class="prompt-block" style="margin:0">Energetic K-POP, female vocal, EDM, BPM 130, catchy</div></div>
+    </div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ 실수 2: 너무 복잡</div><div class="prompt-block" style="margin:0">"슬프면서도 행복하고 빠르면서도 느린 재즈힙합록발라드"</div></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 개선</div><div class="prompt-block" style="margin:0">Melancholic Jazz, slow, piano, soft female vocal, BPM 70</div></div>
+    </div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ 실수 3: 한국어로만</div><div class="prompt-block" style="margin:0">"여자 아이돌 노래"</div></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 개선</div><div class="prompt-block" style="margin:0">K-POP, female vocal, girl group style, catchy</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 3 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">03</div>
+    <div class="chapter-title">장르별<br>프롬프트 실습</div>
+  </div>
+
+  <!-- K-POP -->
+  <div class="genre-card">
+    <div class="genre-card-title">🎤 K-POP 스타일</div>
+    <div class="genre-card-desc">한국 대중음악으로, 중독성 있는 멜로디와 화려한 사운드가 특징입니다.</div>
+    <div class="genre-example">
+      <h4>1. 걸그룹 스타일 — 청량하고 귀여운</h4>
+      <div class="genre-code">K-POP, female vocal, city pop, dreamy, cute funk, chill, synths, Playful, Lighthearted, BPM 115, catchy hooks</div>
+      <div class="genre-meta">📝 <strong>어떤 느낌?</strong> 오마이걸, 아이브 같은 청량한 느낌<br>🎵 <strong>활용 상황:</strong> 밝은 뮤직비디오, 광고 음악</div>
+    </div>
+    <div class="genre-example">
+      <h4>2. 걸그룹 스타일 — 강렬하고 파워풀</h4>
+      <div class="genre-code">K-POP, female vocal, nu-metal hiphop, heavy bass, glitchy EDM, Electropop, drill, Dark tones, deep bass, Jersey club, BPM 128</div>
+      <div class="genre-meta">📝 <strong>어떤 느낌?</strong> 블랙핑크, 르세라핌 같은 강렬함<br>🎵 <strong>활용 상황:</strong> 카리스마 넘치는 무대, 힙한 영상</div>
+    </div>
+    <div class="genre-example">
+      <h4>3. 보이그룹 스타일 — 웅장하고 드라마틱</h4>
+      <div class="genre-code">K-POP, male vocal, orchestral, massive male choirs, Symphonic, epic, warlike and martial, strong beats, rhythmic, BPM 90</div>
+      <div class="genre-meta">📝 <strong>어떤 느낌?</strong> EXO 마마 같은 웅장함<br>🎵 <strong>활용 상황:</strong> 드라마틱한 무대, 영웅 컨셉</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">🔧 프롬프트 커스터마이징 연습</div>
+  <div class="box box-tip"><h4>기본형</h4><div class="prompt-block">K-POP, female vocal, Electropop, BPM 120, catchy</div></div>
+  <div class="box box-success"><h4>변형 1 — 더 밝게</h4><div class="prompt-block">K-POP, female vocal, Electropop, BPM 120, catchy, Cheerful, Bright</div></div>
+  <div class="box box-success"><h4>변형 2 — 신스 사운드 강조</h4><div class="prompt-block">K-POP, female vocal, Electropop, synth, electronic beats, BPM 120, catchy</div></div>
+  <div class="box box-success"><h4>변형 3 — 레트로 느낌</h4><div class="prompt-block">K-POP, female vocal, Electropop, 80s, retro, nostalgic, BPM 120, catchy</div></div>
+
+  <div class="exercise" style="margin-top:24px">
+    <h4>📝 연습 과제</h4>
+    <ol>
+      <li>여름 해변 컨셉의 청량한 걸그룹 노래</li>
+      <li>강렬한 랩이 들어간 보이그룹 노래</li>
+      <li>감성적인 발라드 K-POP</li>
+    </ol>
+  </div>
+
+  <!-- EDM -->
+  <div class="genre-card" style="margin-top:40px">
+    <div class="genre-card-title">🎧 EDM &amp; 일렉트로닉 스타일 <span class="new-badge">2026 NEW</span></div>
+    <div class="genre-card-desc">Electronic Dance Music의 약자로, 신스와 전자 사운드가 중심인 춤추기 좋은 음악입니다.</div>
+    <div class="genre-example"><h4>1. 하우스 (House)</h4><div class="genre-code">House, four-on-the-floor beat, groovy bass, synth stabs, uplifting, BPM 125, club anthem</div><div class="genre-meta">📝 규칙적인 4박자 리듬, 반복적인 베이스</div></div>
+    <div class="genre-example"><h4>2. 트랩 (Trap)</h4><div class="genre-code">Trap, heavy 808 bass, hi-hat rolls, dark atmosphere, aggressive, BPM 140, modern hip-hop influence</div><div class="genre-meta">📝 강력한 베이스, 빠른 하이햇, 어두운 분위기</div></div>
+    <div class="genre-example"><h4>3. 퓨처 베이스 (Future Bass)</h4><div class="genre-code">Future Bass, lush synths, vocal chops, melodic, emotional, uplifting drops, BPM 150, colorful</div><div class="genre-meta">📝 풍성한 신스, 감성적 멜로디, 화려한 드롭</div></div>
+    <div class="genre-example"><h4>4. 테크노 (Techno)</h4><div class="genre-code">Techno, repetitive beats, industrial sounds, hypnotic, driving rhythm, minimal, BPM 130, underground</div><div class="genre-meta">📝 반복적인 비트, 미니멀한 구성, 최면적</div></div>
+    <div class="genre-example"><h4>5. 덥스텝 (Dubstep)</h4><div class="genre-code">Dubstep, wobble bass, heavy drops, aggressive, dark, half-time rhythm, BPM 140, intense</div><div class="genre-meta">📝 워블 베이스, 강렬한 드롭</div></div>
+  </div>
+  <div class="box box-tip" style="margin-top:8px">
+    <h4>💡 EDM 프롬프트 작성 팁</h4>
+    <ul style="color:var(--text2);font-size:.9rem;padding-left:16px">
+      <li><strong>드롭 강조:</strong> "heavy drop", "epic drop" 추가</li>
+      <li><strong>빌드업:</strong> "[build-up]" 태그 사용</li>
+      <li><strong>신스 레이어:</strong> "lush synths", "atmospheric pads" 추가</li>
+    </ul>
+  </div>
+
+  <!-- JAZZ -->
+  <div class="genre-card" style="margin-top:40px">
+    <div class="genre-card-title">🎺 재즈 &amp; 블루스 스타일 <span class="new-badge">2026 NEW</span></div>
+    <div class="genre-card-desc">재즈: 즉흥 연주와 스윙 리듬이 특징 | 블루스: 슬프고 감성적인 흑인 음악</div>
+    <div class="genre-example"><h4>1. 스무스 재즈</h4><div class="genre-code">Smooth Jazz, saxophone, piano, upright bass, mellow, relaxing, sophisticated, BPM 90, evening lounge</div></div>
+    <div class="genre-example"><h4>2. 스윙 재즈</h4><div class="genre-code">Swing Jazz, big band, brass section, upbeat, energetic, 1940s style, BPM 120, danceable</div></div>
+    <div class="genre-example"><h4>3. 블루스</h4><div class="genre-code">Blues, emotional guitar, harmonica, soulful male vocal, melancholic, raw, BPM 70, Mississippi style</div></div>
+    <div class="genre-example"><h4>4. 재즈 힙합 (Lo-Fi)</h4><div class="genre-code">Jazz Hip-Hop, lo-fi beats, vinyl samples, chill, relaxing, study music, BPM 85, nostalgic</div></div>
+  </div>
+
+  <!-- GAME OST -->
+  <div class="genre-card" style="margin-top:40px">
+    <div class="genre-card-title">🎮 게임 &amp; 영화 OST <span class="new-badge">2026 NEW</span></div>
+    <div class="genre-card-desc">Original Sound Track — 게임이나 영화의 배경음악</div>
+    <div class="genre-example"><h4>1. 판타지 게임 OST</h4><div class="genre-code">Orchestral, epic, fantasy, strings, brass, choir, heroic, adventurous, BPM 100, cinematic</div></div>
+    <div class="genre-example"><h4>2. 공포 게임 OST</h4><div class="genre-code">Dark ambient, horror, tension, dissonant strings, eerie sounds, suspenseful, BPM 60, atmospheric</div></div>
+    <div class="genre-example"><h4>3. RPG 마을 음악</h4><div class="genre-code">Folk, acoustic, peaceful, flute, harp, gentle, warm, nostalgic, BPM 80, medieval</div></div>
+    <div class="genre-example"><h4>4. 액션 영화 OST</h4><div class="genre-code">Epic orchestral, intense, percussion heavy, brass, dramatic, powerful, BPM 140, blockbuster</div></div>
+    <div class="genre-example"><h4>5. 감성 애니메이션 OST</h4><div class="genre-code">Emotional, piano, strings, gentle, touching, nostalgic, beautiful melody, BPM 75, heartwarming</div></div>
+  </div>
+
+  <!-- OTHER GENRES -->
+  <div class="subsection-title" style="margin-top:40px">🎸 기타 인기 장르 프롬프트</div>
+  <div class="box box-info"><h4>팝 &amp; 알앤비</h4>
+    <div class="prompt-block"><strong>밝은 팝송:</strong> Pop, upbeat, catchy melody, acoustic guitar, piano, Cheerful, feel-good, BPM 110, radio-friendly<br><br><strong>감성 알앤비:</strong> R&B, smooth, soulful, soft female vocal, mellow, emotional, slow groove, BPM 75, intimate<br><br><strong>댄스 팝:</strong> Dance Pop, Electropop, energetic, synth, electronic beats, catchy hooks, BPM 128, club-ready</div>
+  </div>
+  <div class="box box-info"><h4>힙합 &amp; 랩</h4>
+    <div class="prompt-block"><strong>올드스쿨 힙합:</strong> 90s hip-hop, boom bap, vinyl samples, turntablism, jazzy samples, lo-fi, nostalgic, deep bass, BPM 92<br><br><strong>트랩 힙합:</strong> Trap, heavy 808 bass, hi-hat rolls, dark, aggressive, modern rap, BPM 140, street<br><br><strong>감성 힙합:</strong> Emo rap, melodic, auto-tune, emotional, sad, atmospheric, BPM 80, introspective</div>
+  </div>
+  <div class="box box-info"><h4>인디 &amp; 록</h4>
+    <div class="prompt-block"><strong>인디 포크:</strong> Indie folk, acoustic guitar, warm, stripped down, heartfelt, nostalgic, BPM 90, intimate<br><br><strong>얼터너티브 록:</strong> Alternative rock, electric guitar, drums, raw, energetic, 90s grunge, BPM 120, rebellious</div>
+  </div>
+  <div class="box box-info"><h4>트로트 &amp; 레트로</h4>
+    <div class="prompt-block"><strong>현대 트로트:</strong> Modern Trot, traditional Korean, trot rhythm, emotional vocal, accordion, BPM 120, catchy<br><br><strong>7080 포크:</strong> 70s 80s Korean folk, acoustic, nostalgic, warm, storytelling, emotional, BPM 90, vintage</div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 4 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">04</div>
+    <div class="chapter-title">가사 작성<br>완전 가이드</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">✨</span>4-1. 좋은 가사의 3가지 원칙</div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ 막연</div><p>"좋은 기분"</p></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 구체적으로</div><p>"햇살 아래 춤추는 기분"</p></div>
+    </div>
+    <div class="box box-tip"><h4>② 감정 키워드 명시</h4><p>happy, sad, anxious, excited, lonely, hopeful</p></div>
+    <div class="box box-success"><h4>③ 이미지 활용</h4><p>"별빛처럼 반짝이는", "파도처럼 밀려오는"</p></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🏗️</span>4-2. 가사 구조 템플릿</div>
+    <div class="box box-info"><h4>기본 구조</h4><p><strong>Intro → Verse 1 → Chorus → Verse 2 → Chorus → Bridge → Chorus → Outro</strong></p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>파트</th><th>역할</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Intro</strong></td><td>노래 시작, 분위기 설정</td></tr>
+          <tr><td><strong>Verse</strong></td><td>이야기 전개</td></tr>
+          <tr><td><strong>Chorus</strong></td><td>가장 기억에 남는 부분, 반복</td></tr>
+          <tr><td><strong>Bridge</strong></td><td>새로운 관점, 전환점</td></tr>
+          <tr><td><strong>Outro</strong></td><td>마무리</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎵</span>4-3. 가사 예시 (K-POP 스타일)</div>
+    <div class="lyrics-block"><span class="lyrics-tag">[Catchy Instrumental Intro]</span>
+
+<span class="lyrics-tag">[Verse 1]</span>
+아침 햇살이 눈부셔
+새로운 하루가 시작돼
+너와 함께라면 난
+어디든 갈 수 있어
+
+<span class="lyrics-tag">[Chorus]</span>
+Let's fly high, 하늘 위로
+우리 꿈을 향해 달려가
+빛나는 별이 되어
+세상을 밝혀줄 거야
+
+<span class="lyrics-tag">[Verse 2]</span>
+때론 힘들고 지쳐도
+포기하지 않을 거야
+너의 미소가 있다면
+다시 일어설 수 있어
+
+<span class="lyrics-tag">[Chorus]</span>
+Let's fly high, 하늘 위로
+우리 꿈을 향해 달려가
+빛나는 별이 되어
+세상을 밝혀줄 거야
+
+<span class="lyrics-tag">[Bridge]</span>
+우리 함께라면
+두렵지 않아
+이 순간을 영원히
+
+<span class="lyrics-tag">[Chorus]</span>
+Let's fly high, 하늘 위로
+우리 꿈을 향해 달려가
+빛나는 별이 되어
+세상을 밝혀줄 거야
+
+<span class="lyrics-tag">[Outro]</span>
+We can fly...</div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 5 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">05</div>
+    <div class="chapter-title">실전 활용 팁<br>&amp; 체크리스트</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">✅</span>5-1. 프롬프트 작성 9단계 체크리스트</div>
+    <div class="checklist">
+      <h4>작곡 전 체크</h4>
+      <ul>
+        <li><strong>1.</strong> 어떤 장르의 음악을 만들고 싶은지 정했나요?</li>
+        <li><strong>2.</strong> 남자/여자/혼성 보컬 중 선택했나요?</li>
+        <li><strong>3.</strong> 어떤 분위기를 원하는지 정했나요?</li>
+        <li><strong>4.</strong> 사용할 악기를 2-3개 선택했나요?</li>
+        <li><strong>5.</strong> BPM(템포)을 설정했나요?</li>
+      </ul>
+    </div>
+    <div class="checklist">
+      <h4>프롬프트 작성 시</h4>
+      <ul>
+        <li><strong>6.</strong> 모든 키워드를 영어로 작성했나요?</li>
+        <li><strong>7.</strong> 쉼표(,)로 각 요소를 구분했나요?</li>
+        <li><strong>8.</strong> 너무 복잡하지 않게 5-10개 요소로 구성했나요?</li>
+        <li><strong>9.</strong> [Intro], [Verse], [Chorus] 같은 구조 태그를 추가했나요?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">💡</span>5-2. 프롬프트 개선 5가지 팁</div>
+    <div class="tip-item"><h4>Tip 1: 장르 믹스로 독특함 만들기</h4><p>기본: <code>K-POP</code> → 개선: <code>K-POP + Jazz + Lo-fi</code></p></div>
+    <div class="tip-item"><h4>Tip 2: 아티스트 스타일 참조</h4><p>기본: <code>Pop</code> → 개선: <code>Pop, Taylor Swift style, storytelling</code></p></div>
+    <div class="tip-item"><h4>Tip 3: 시대 느낌 추가</h4><p>기본: <code>Rock</code> → 개선: <code>80s rock, retro, nostalgic, vintage</code></p></div>
+    <div class="tip-item">
+      <h4>Tip 4: BPM으로 에너지 조절</h4>
+      <ul>
+        <li>차분한 노래: BPM 60-80</li>
+        <li>중간 템포: BPM 90-120</li>
+        <li>신나는 노래: BPM 130-150+</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">❓</span>5-3. 자주 묻는 질문 (FAQ)</div>
+    <div class="faq-item"><div class="faq-q">프롬프트를 한국어로 써도 되나요?</div><div class="faq-a">영어로 작성하는 것을 권장합니다. 대부분의 AI 음악 도구는 영어 프롬프트에 최적화되어 있습니다.</div></div>
+    <div class="faq-item"><div class="faq-q">한 번에 완벽한 음악이 나오나요?</div><div class="faq-a">아닙니다! 보통 3-5번 정도 프롬프트를 수정하며 원하는 결과를 찾습니다.</div></div>
+    <div class="faq-item"><div class="faq-q">가사도 꼭 써야 하나요?</div><div class="faq-a">아니요. 가사 없이 프롬프트만으로도 인스트루멘탈 음악이 생성됩니다.</div></div>
+    <div class="faq-item"><div class="faq-q">프롬프트가 너무 길면 안 되나요?</div><div class="faq-a">네, 너무 길면 AI가 혼란스러워할 수 있습니다. 5-10개 핵심 요소만 선택하세요.</div></div>
+    <div class="faq-item"><div class="faq-q">저작권 문제는 없나요?</div><div class="faq-a">2026년 현재 Suno와 Udio는 메이저 레이블과 라이선싱 계약을 맺어 합법적으로 사용 가능합니다. 단, 상업적 사용 시 각 플랫폼의 이용약관을 확인하세요.</div></div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 6 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">06</div>
+    <div class="chapter-title">연습 과제<br>&amp; 참고 자료</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">📝</span>6-1. 연습 과제</div>
+    <div class="exercise"><h4>입문 과제 ⭐</h4><ol><li>밝고 경쾌한 K-POP 프롬프트 작성하기</li><li>차분한 재즈 프롬프트 작성하기</li><li>신나는 EDM 프롬프트 작성하기</li></ol></div>
+    <div class="exercise"><h4>중급 과제 ⭐⭐</h4><ol start="4"><li>두 가지 장르를 섞은 프롬프트 작성하기 (예: Jazz + Hip-Hop)</li><li>구조 태그를 사용한 완전한 가사 작성하기</li><li>특정 아티스트 스타일을 참조한 프롬프트 작성하기</li></ol></div>
+    <div class="exercise"><h4>고급 과제 ⭐⭐⭐</h4><ol start="7"><li>영화 장면에 맞는 OST 3곡 만들기 (액션, 로맨스, 공포)</li><li>하나의 테마로 장르별 음악 5곡 만들기</li><li>나만의 시그니처 프롬프트 템플릿 개발하기</li></ol></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎓</span>6-2. 추천 학습 순서 (4주 과정)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>주차</th><th>학습 내용</th><th>목표</th></tr></thead>
+        <tbody class="week-row">
+          <tr><td>1주차</td><td>기본 장르별 템플릿으로 10곡 만들어보기</td><td>프롬프트 작성에 익숙해지기</td></tr>
+          <tr><td>2주차</td><td>장르 믹스 실험 (5가지 조합)</td><td>창의적 조합 능력 키우기</td></tr>
+          <tr><td>3주차</td><td>구조 태그와 가사 활용하기</td><td>완성도 높은 곡 제작</td></tr>
+          <tr><td>4주차</td><td>나만의 시그니처 스타일 찾기</td><td>독창적 음악 스타일 확립</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎉</span>6-3. 마무리하며</div>
+    <div class="box box-success">
+      <h4>축하합니다! 이제 여러분은 AI 작곡의 기초를 완전히 이해했습니다. 🎉</h4>
+      <ul style="margin-top:16px;padding-left:18px;color:var(--text2);font-size:.9rem">
+        <li>✅ 완벽한 첫 시도는 없습니다 — 실험이 중요해요!</li>
+        <li>✅ 다른 사람의 프롬프트를 참고하고 변형하세요</li>
+        <li>✅ 실패는 배움의 과정입니다</li>
+        <li>✅ 꾸준히 연습하면 금방 늘어요!</li>
+      </ul>
+      <p style="margin-top:20px;font-size:1rem;text-align:center;color:var(--accent2)">여러분의 창의적인 음악 제작 여정을 응원합니다! 🎵✨</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div style="font-size:2rem;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(192,132,252,.5))">🎵</div>
+  <p class="footer-title">2026 AI 작곡 프롬프트 가이드북</p>
+  <p style="margin-top:12px;font-size:.75rem;opacity:.4">© 2026 JUN쌤 AI 뮤직 스쿨</p>
+</div>
+
+</div><!-- /content-ko -->
+
+
+<!-- ═══════════════════════ JAPANESE VERSION ═══════════════════════ -->
+<div id="content-ja">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-eyebrow">2026 最新改訂版</div>
+  <h1>AI作曲<br>プロンプトガイド</h1>
+  <div class="cover-sub">ジャンル別プロンプト集 — 誰でも作れるAI音楽</div>
+  <div class="cover-icons">🎵 🎼 🎹 🎸 🎧</div>
+  <div class="cover-date">2026.03.20</div>
+  <div class="cover-scroll">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- TOC -->
+<div class="toc-wrap">
+  <div class="toc-title">📑 目次</div>
+  <ul class="toc-list">
+    <li><span class="toc-num">01</span><div>はじめに — AI作曲 完全攻略</div></li>
+    <li><span class="toc-num">02</span><div>プロンプトの基礎固め</div></li>
+    <li>
+      <span class="toc-num">03</span>
+      <div>
+        ジャンル別プロンプト実習
+        <ul class="toc-sub">
+          <li>K-POPスタイル</li>
+          <li>EDM &amp; エレクトロニックスタイル <span class="badge">NEW</span></li>
+          <li>ジャズ &amp; ブルーススタイル <span class="badge">NEW</span></li>
+          <li>ゲーム &amp; 映画OST <span class="badge">NEW</span></li>
+          <li>ポップ &amp; R&amp;B / ヒップホップ / インディー / トロット</li>
+        </ul>
+      </div>
+    </li>
+    <li><span class="toc-num">04</span><div>歌詞作成 完全ガイド</div></li>
+    <li><span class="toc-num">05</span><div>実践活用のコツ &amp; チェックリスト</div></li>
+    <li><span class="toc-num">06</span><div>練習課題 &amp; 参考資料</div></li>
+  </ul>
+</div>
+
+
+<!-- ── CHAPTER 1 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">01</div>
+    <div class="chapter-title">はじめに<br>AI作曲 完全攻略</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🤔</span>1-1. AI作曲とは？</div>
+    <div class="box box-info"><h4>わかりやすく説明</h4><p>文章で音楽を作る、魔法のような技術です！</p></div>
+    <div class="box box-success"><h4>誰でもできますか？</h4><p>✅ はい！音楽の知識がまったくなくても大丈夫。タイピングさえできればOK！</p></div>
+    <div class="box box-tip"><h4>どうやって動くの？</h4><p>作りたい音楽のスタイルを文章で説明 → AIが自動で音楽を生成</p></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🛠️</span>1-2. 2026年 人気AI作曲ツール</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ツール</th><th>おすすめ対象</th><th>長所</th><th>特徴</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Suno v4.5</strong> ⭐⭐⭐⭐⭐</td><td>初心者</td><td>最も簡単、日本語・韓国語対応、無料体験あり</td><td>Personas機能で一貫したスタイルを維持</td></tr>
+          <tr><td><strong>Udio</strong> ⭐⭐⭐⭐</td><td>中級者</td><td>精密なコントロール、メジャーレーベルとのライセンス契約</td><td>プロフェッショナルなサウンド品質</td></tr>
+          <tr><td><strong>ElevenLabs Music</strong> ⭐⭐⭐⭐</td><td>ボーカル重視</td><td>音楽＋音声の統合制作</td><td>感情豊かなボーカルに特化</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">📝</span>1-3. プロンプトとは？</div>
+    <div class="box box-info"><p><strong>定義:</strong> AIに「どんな音楽を作ってほしいか」を説明する文章</p></div>
+    <div class="comparison">
+      <div class="cmp-bad">
+        <div class="cmp-label">❌ 悪い例</div>
+        <div class="prompt-block" style="margin:0">「いい曲を作って」</div>
+        <div class="cmp-note">問題点: 漠然としすぎ</div>
+      </div>
+      <div class="cmp-good">
+        <div class="cmp-label">✅ 良い例</div>
+        <div class="prompt-block" style="margin:0">K-POP, female vocal, Electropop, BPM 125, catchy, Cheerful</div>
+        <div class="cmp-note">改善: ジャンル・ボーカル・テンポが明確</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">💡</span>1-4. このガイドブックの使い方</div>
+    <div class="checklist">
+      <ul>
+        <li><strong>Step 1:</strong> 好きなジャンルを探す</li>
+        <li><strong>Step 2:</strong> 基本プロンプトをコピーする</li>
+        <li><strong>Step 3:</strong> 自分だけのスタイルにアレンジする</li>
+        <li><strong>Step 4:</strong> AIツールに入力して生成！</li>
+        <li><strong>Step 5:</strong> 結果を確認してプロンプトを修正</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 2 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">02</div>
+    <div class="chapter-title">プロンプトの<br>基礎固め</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎼</span>2-1. プロンプトの4つの核心要素</div>
+    <div class="grid2">
+      <div class="box box-info"><h4>① ジャンル (Genre)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">音楽の基本スタイル</p><div class="prompt-block" style="margin:0;font-size:.75rem">K-POP, Jazz, Rock, EDM, Ballad</div></div>
+      <div class="box box-info"><h4>② 雰囲気 (Mood)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">音楽が与える印象</p><div class="prompt-block" style="margin:0;font-size:.75rem">Cheerful, Dark, Dreamy, Energetic</div></div>
+      <div class="box box-info"><h4>③ 楽器 (Instruments)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">使用する楽器</p><div class="prompt-block" style="margin:0;font-size:.75rem">piano, guitar, synth, drums, strings</div></div>
+      <div class="box box-info"><h4>④ テンポ (BPM)</h4><p style="color:var(--text2);font-size:.9rem;margin-bottom:8px">音楽の速さ</p><div class="prompt-block" style="margin:0;font-size:.75rem">遅い: 60-80<br>中間: 90-120<br>速い: 130-180</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">✍️</span>2-2. プロンプト作成の公式</div>
+    <div class="box box-success">
+      <h4>基本公式</h4>
+      <div class="prompt-block" style="color:var(--text);font-size:.9rem">[ジャンル] + [ボーカルタイプ] + [サブジャンル] + [楽器] + [雰囲気] + [BPM] + [特殊効果]</div>
+    </div>
+    <div class="box box-tip">
+      <h4>実践例</h4>
+      <div class="prompt-block">K-POP, female vocal, Electropop, synth, piano, Cheerful, Catchy, BPM 120</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">📚</span>2-3. よく使う英語表現集</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>カテゴリ</th><th>英語表現</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ボーカル</strong></td><td>female vocal, male vocal, mixed voices, powerful voice, soft voice</td></tr>
+          <tr><td><strong>雰囲気</strong></td><td>Cheerful, Melancholic, Energetic, Romantic, Dreamy, Dark, Bright, Chill</td></tr>
+          <tr><td><strong>音楽の特性</strong></td><td>Catchy, Upbeat, Slow, Fast, Heavy, Light, Groovy, Smooth</td></tr>
+          <tr><td><strong>楽器</strong></td><td>piano, guitar, synth, drums, bass, strings, brass, percussion</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">❌</span>2-4. 初心者がよくやるミス</div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ ミス 1: シンプルすぎ</div><div class="prompt-block" style="margin:0">「ノリのいい曲」</div></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 改善</div><div class="prompt-block" style="margin:0">Energetic K-POP, female vocal, EDM, BPM 130, catchy</div></div>
+    </div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ ミス 2: 複雑すぎ</div><div class="prompt-block" style="margin:0">「悲しくて幸せで速くて遅いジャズヒップホップロックバラード」</div></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 改善</div><div class="prompt-block" style="margin:0">Melancholic Jazz, slow, piano, soft female vocal, BPM 70</div></div>
+    </div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ ミス 3: 日本語だけ</div><div class="prompt-block" style="margin:0">「女性アイドルの曲」</div></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 改善</div><div class="prompt-block" style="margin:0">K-POP, female vocal, girl group style, catchy</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 3 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">03</div>
+    <div class="chapter-title">ジャンル別<br>プロンプト実習</div>
+  </div>
+
+  <!-- K-POP -->
+  <div class="genre-card">
+    <div class="genre-card-title">🎤 K-POPスタイル</div>
+    <div class="genre-card-desc">韓国のポピュラー音楽で、中毒性のあるメロディと華やかなサウンドが特徴です。</div>
+    <div class="genre-example">
+      <h4>1. ガールズグループ — 爽やかでキュート</h4>
+      <div class="genre-code">K-POP, female vocal, city pop, dreamy, cute funk, chill, synths, Playful, Lighthearted, BPM 115, catchy hooks</div>
+      <div class="genre-meta">📝 <strong>どんな感じ？</strong> OH MY GIRL、IVEのような爽やかさ<br>🎵 <strong>活用シーン:</strong> 明るいミュージックビデオ、CM音楽</div>
+    </div>
+    <div class="genre-example">
+      <h4>2. ガールズグループ — 強烈でパワフル</h4>
+      <div class="genre-code">K-POP, female vocal, nu-metal hiphop, heavy bass, glitchy EDM, Electropop, drill, Dark tones, deep bass, Jersey club, BPM 128</div>
+      <div class="genre-meta">📝 <strong>どんな感じ？</strong> BLACKPINK、LE SSERAFIMのような強烈さ<br>🎵 <strong>活用シーン:</strong> カリスマ溢れるステージ、スタイリッシュな映像</div>
+    </div>
+    <div class="genre-example">
+      <h4>3. ボーイズグループ — 壮大でドラマチック</h4>
+      <div class="genre-code">K-POP, male vocal, orchestral, massive male choirs, Symphonic, epic, warlike and martial, strong beats, rhythmic, BPM 90</div>
+      <div class="genre-meta">📝 <strong>どんな感じ？</strong> EXO「MAMA」のような壮大さ<br>🎵 <strong>活用シーン:</strong> ドラマチックなステージ、ヒーローコンセプト</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">🔧 プロンプトカスタマイズ練習</div>
+  <div class="box box-tip"><h4>基本形</h4><div class="prompt-block">K-POP, female vocal, Electropop, BPM 120, catchy</div></div>
+  <div class="box box-success"><h4>バリエーション 1 — より明るく</h4><div class="prompt-block">K-POP, female vocal, Electropop, BPM 120, catchy, Cheerful, Bright</div></div>
+  <div class="box box-success"><h4>バリエーション 2 — シンセサウンド強調</h4><div class="prompt-block">K-POP, female vocal, Electropop, synth, electronic beats, BPM 120, catchy</div></div>
+  <div class="box box-success"><h4>バリエーション 3 — レトロ感</h4><div class="prompt-block">K-POP, female vocal, Electropop, 80s, retro, nostalgic, BPM 120, catchy</div></div>
+
+  <div class="exercise" style="margin-top:24px">
+    <h4>📝 練習課題</h4>
+    <ol>
+      <li>夏のビーチコンセプトの爽やかなガールズグループ曲</li>
+      <li>強烈なラップ入りのボーイズグループ曲</li>
+      <li>エモーショナルなバラードK-POP</li>
+    </ol>
+  </div>
+
+  <!-- EDM -->
+  <div class="genre-card" style="margin-top:40px">
+    <div class="genre-card-title">🎧 EDM &amp; エレクトロニックスタイル <span class="new-badge">2026 NEW</span></div>
+    <div class="genre-card-desc">Electronic Dance Musicの略で、シンセと電子サウンドが中心の踊りやすい音楽です。</div>
+    <div class="genre-example"><h4>1. ハウス (House)</h4><div class="genre-code">House, four-on-the-floor beat, groovy bass, synth stabs, uplifting, BPM 125, club anthem</div><div class="genre-meta">📝 規則的な4拍子リズム、反復するベース</div></div>
+    <div class="genre-example"><h4>2. トラップ (Trap)</h4><div class="genre-code">Trap, heavy 808 bass, hi-hat rolls, dark atmosphere, aggressive, BPM 140, modern hip-hop influence</div><div class="genre-meta">📝 強力なベース、速いハイハット、ダークな雰囲気</div></div>
+    <div class="genre-example"><h4>3. フューチャーベース (Future Bass)</h4><div class="genre-code">Future Bass, lush synths, vocal chops, melodic, emotional, uplifting drops, BPM 150, colorful</div><div class="genre-meta">📝 豊かなシンセ、感情的なメロディ、華やかなドロップ</div></div>
+    <div class="genre-example"><h4>4. テクノ (Techno)</h4><div class="genre-code">Techno, repetitive beats, industrial sounds, hypnotic, driving rhythm, minimal, BPM 130, underground</div><div class="genre-meta">📝 反復するビート、ミニマルな構成、催眠的</div></div>
+    <div class="genre-example"><h4>5. ダブステップ (Dubstep)</h4><div class="genre-code">Dubstep, wobble bass, heavy drops, aggressive, dark, half-time rhythm, BPM 140, intense</div><div class="genre-meta">📝 ワブルベース、強烈なドロップ</div></div>
+  </div>
+  <div class="box box-tip" style="margin-top:8px">
+    <h4>💡 EDMプロンプト作成のコツ</h4>
+    <ul style="color:var(--text2);font-size:.9rem;padding-left:16px">
+      <li><strong>ドロップ強調:</strong> "heavy drop", "epic drop" を追加</li>
+      <li><strong>ビルドアップ:</strong> "[build-up]" タグを使用</li>
+      <li><strong>シンセレイヤー:</strong> "lush synths", "atmospheric pads" を追加</li>
+    </ul>
+  </div>
+
+  <!-- JAZZ -->
+  <div class="genre-card" style="margin-top:40px">
+    <div class="genre-card-title">🎺 ジャズ &amp; ブルーススタイル <span class="new-badge">2026 NEW</span></div>
+    <div class="genre-card-desc">ジャズ: 即興演奏とスウィングリズムが特徴 | ブルース: 哀愁漂う感情豊かな音楽</div>
+    <div class="genre-example"><h4>1. スムースジャズ</h4><div class="genre-code">Smooth Jazz, saxophone, piano, upright bass, mellow, relaxing, sophisticated, BPM 90, evening lounge</div></div>
+    <div class="genre-example"><h4>2. スウィングジャズ</h4><div class="genre-code">Swing Jazz, big band, brass section, upbeat, energetic, 1940s style, BPM 120, danceable</div></div>
+    <div class="genre-example"><h4>3. ブルース</h4><div class="genre-code">Blues, emotional guitar, harmonica, soulful male vocal, melancholic, raw, BPM 70, Mississippi style</div></div>
+    <div class="genre-example"><h4>4. ジャズヒップホップ (Lo-Fi)</h4><div class="genre-code">Jazz Hip-Hop, lo-fi beats, vinyl samples, chill, relaxing, study music, BPM 85, nostalgic</div></div>
+  </div>
+
+  <!-- GAME OST -->
+  <div class="genre-card" style="margin-top:40px">
+    <div class="genre-card-title">🎮 ゲーム &amp; 映画OST <span class="new-badge">2026 NEW</span></div>
+    <div class="genre-card-desc">Original Sound Track — ゲームや映画のBGM</div>
+    <div class="genre-example"><h4>1. ファンタジーゲームOST</h4><div class="genre-code">Orchestral, epic, fantasy, strings, brass, choir, heroic, adventurous, BPM 100, cinematic</div></div>
+    <div class="genre-example"><h4>2. ホラーゲームOST</h4><div class="genre-code">Dark ambient, horror, tension, dissonant strings, eerie sounds, suspenseful, BPM 60, atmospheric</div></div>
+    <div class="genre-example"><h4>3. RPGの村の音楽</h4><div class="genre-code">Folk, acoustic, peaceful, flute, harp, gentle, warm, nostalgic, BPM 80, medieval</div></div>
+    <div class="genre-example"><h4>4. アクション映画OST</h4><div class="genre-code">Epic orchestral, intense, percussion heavy, brass, dramatic, powerful, BPM 140, blockbuster</div></div>
+    <div class="genre-example"><h4>5. 感動アニメOST</h4><div class="genre-code">Emotional, piano, strings, gentle, touching, nostalgic, beautiful melody, BPM 75, heartwarming</div></div>
+  </div>
+
+  <!-- OTHER GENRES -->
+  <div class="subsection-title" style="margin-top:40px">🎸 その他の人気ジャンルプロンプト</div>
+  <div class="box box-info"><h4>ポップ &amp; R&amp;B</h4>
+    <div class="prompt-block"><strong>明るいポップス:</strong> Pop, upbeat, catchy melody, acoustic guitar, piano, Cheerful, feel-good, BPM 110, radio-friendly<br><br><strong>エモーショナルR&amp;B:</strong> R&B, smooth, soulful, soft female vocal, mellow, emotional, slow groove, BPM 75, intimate<br><br><strong>ダンスポップ:</strong> Dance Pop, Electropop, energetic, synth, electronic beats, catchy hooks, BPM 128, club-ready</div>
+  </div>
+  <div class="box box-info"><h4>ヒップホップ &amp; ラップ</h4>
+    <div class="prompt-block"><strong>オールドスクールヒップホップ:</strong> 90s hip-hop, boom bap, vinyl samples, turntablism, jazzy samples, lo-fi, nostalgic, deep bass, BPM 92<br><br><strong>トラップヒップホップ:</strong> Trap, heavy 808 bass, hi-hat rolls, dark, aggressive, modern rap, BPM 140, street<br><br><strong>エモーショナルヒップホップ:</strong> Emo rap, melodic, auto-tune, emotional, sad, atmospheric, BPM 80, introspective</div>
+  </div>
+  <div class="box box-info"><h4>インディー &amp; ロック</h4>
+    <div class="prompt-block"><strong>インディーフォーク:</strong> Indie folk, acoustic guitar, warm, stripped down, heartfelt, nostalgic, BPM 90, intimate<br><br><strong>オルタナティブロック:</strong> Alternative rock, electric guitar, drums, raw, energetic, 90s grunge, BPM 120, rebellious</div>
+  </div>
+  <div class="box box-info"><h4>トロット &amp; レトロ</h4>
+    <div class="prompt-block"><strong>現代トロット:</strong> Modern Trot, traditional Korean, trot rhythm, emotional vocal, accordion, BPM 120, catchy<br><br><strong>70s・80s フォーク:</strong> 70s 80s Korean folk, acoustic, nostalgic, warm, storytelling, emotional, BPM 90, vintage</div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 4 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">04</div>
+    <div class="chapter-title">歌詞作成<br>完全ガイド</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">✨</span>4-1. 良い歌詞の3つの原則</div>
+    <div class="comparison">
+      <div class="cmp-bad"><div class="cmp-label">❌ 漠然と</div><p>「いい気分」</p></div>
+      <div class="cmp-good"><div class="cmp-label">✅ 具体的に</div><p>「陽射しの下で踊る気分」</p></div>
+    </div>
+    <div class="box box-tip"><h4>② 感情キーワードを明示</h4><p>happy, sad, anxious, excited, lonely, hopeful</p></div>
+    <div class="box box-success"><h4>③ イメージを活用</h4><p>「星のようにきらめく」「波のように押し寄せる」</p></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🏗️</span>4-2. 歌詞構造テンプレート</div>
+    <div class="box box-info"><h4>基本構造</h4><p><strong>Intro → Verse 1 → Chorus → Verse 2 → Chorus → Bridge → Chorus → Outro</strong></p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>パート</th><th>役割</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Intro</strong></td><td>曲の始まり、雰囲気づくり</td></tr>
+          <tr><td><strong>Verse</strong></td><td>ストーリーの展開</td></tr>
+          <tr><td><strong>Chorus</strong></td><td>最も記憶に残る部分、繰り返し</td></tr>
+          <tr><td><strong>Bridge</strong></td><td>新しい視点、転換点</td></tr>
+          <tr><td><strong>Outro</strong></td><td>締めくくり</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎵</span>4-3. 歌詞の例（K-POPスタイル）</div>
+    <div class="lyrics-block"><span class="lyrics-tag">[Catchy Instrumental Intro]</span>
+
+<span class="lyrics-tag">[Verse 1]</span>
+朝の陽射しがまぶしい
+新しい一日が始まる
+君と一緒なら
+どこへでも行ける
+
+<span class="lyrics-tag">[Chorus]</span>
+Let's fly high、空の上へ
+僕らの夢に向かって走る
+輝く星になって
+世界を照らすんだ
+
+<span class="lyrics-tag">[Verse 2]</span>
+時には辛くて疲れても
+諦めたりしない
+君の笑顔があれば
+また立ち上がれる
+
+<span class="lyrics-tag">[Chorus]</span>
+Let's fly high、空の上へ
+僕らの夢に向かって走る
+輝く星になって
+世界を照らすんだ
+
+<span class="lyrics-tag">[Bridge]</span>
+僕らが一緒なら
+怖くない
+この瞬間を永遠に
+
+<span class="lyrics-tag">[Chorus]</span>
+Let's fly high、空の上へ
+僕らの夢に向かって走る
+輝く星になって
+世界を照らすんだ
+
+<span class="lyrics-tag">[Outro]</span>
+We can fly...</div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 5 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">05</div>
+    <div class="chapter-title">実践活用のコツ<br>&amp; チェックリスト</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">✅</span>5-1. プロンプト作成 9ステップチェックリスト</div>
+    <div class="checklist">
+      <h4>作曲前のチェック</h4>
+      <ul>
+        <li><strong>1.</strong> どのジャンルの音楽を作りたいか決めましたか？</li>
+        <li><strong>2.</strong> 男性／女性／混声ボーカルから選びましたか？</li>
+        <li><strong>3.</strong> どんな雰囲気にしたいか決めましたか？</li>
+        <li><strong>4.</strong> 使う楽器を2〜3つ選びましたか？</li>
+        <li><strong>5.</strong> BPM（テンポ）を設定しましたか？</li>
+      </ul>
+    </div>
+    <div class="checklist">
+      <h4>プロンプト作成時</h4>
+      <ul>
+        <li><strong>6.</strong> すべてのキーワードを英語で書きましたか？</li>
+        <li><strong>7.</strong> カンマ(,)で各要素を区切りましたか？</li>
+        <li><strong>8.</strong> 複雑になりすぎないよう5〜10個の要素で構成しましたか？</li>
+        <li><strong>9.</strong> [Intro]、[Verse]、[Chorus] などの構造タグを追加しましたか？</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">💡</span>5-2. プロンプト改善 5つのコツ</div>
+    <div class="tip-item"><h4>Tip 1: ジャンルミックスで独自性を出す</h4><p>基本: <code>K-POP</code> → 改善: <code>K-POP + Jazz + Lo-fi</code></p></div>
+    <div class="tip-item"><h4>Tip 2: アーティストスタイルを参照する</h4><p>基本: <code>Pop</code> → 改善: <code>Pop, Taylor Swift style, storytelling</code></p></div>
+    <div class="tip-item"><h4>Tip 3: 時代感を加える</h4><p>基本: <code>Rock</code> → 改善: <code>80s rock, retro, nostalgic, vintage</code></p></div>
+    <div class="tip-item">
+      <h4>Tip 4: BPMでエネルギーを調節する</h4>
+      <ul>
+        <li>落ち着いた曲: BPM 60-80</li>
+        <li>ミドルテンポ: BPM 90-120</li>
+        <li>ノリのいい曲: BPM 130-150+</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">❓</span>5-3. よくある質問 (FAQ)</div>
+    <div class="faq-item"><div class="faq-q">プロンプトは日本語で書いてもいいですか？</div><div class="faq-a">英語での作成をおすすめします。ほとんどのAI音楽ツールは英語プロンプトに最適化されています。</div></div>
+    <div class="faq-item"><div class="faq-q">一回で完璧な音楽ができますか？</div><div class="faq-a">いいえ！通常3〜5回ほどプロンプトを修正しながら、理想の結果を探していきます。</div></div>
+    <div class="faq-item"><div class="faq-q">歌詞は必ず書かないといけませんか？</div><div class="faq-a">いいえ。歌詞なしのプロンプトだけでも、インストゥルメンタル音楽が生成されます。</div></div>
+    <div class="faq-item"><div class="faq-q">プロンプトが長すぎるとダメですか？</div><div class="faq-a">はい、長すぎるとAIが混乱することがあります。5〜10個の核心要素だけを選びましょう。</div></div>
+    <div class="faq-item"><div class="faq-q">著作権の問題はありませんか？</div><div class="faq-a">2026年現在、SunoとUdioはメジャーレーベルとライセンス契約を結んでおり、合法的に利用できます。ただし、商用利用の際は各プラットフォームの利用規約をご確認ください。</div></div>
+  </div>
+</div>
+
+
+<!-- ── CHAPTER 6 ── -->
+<div class="chapter">
+  <div class="chapter-header">
+    <div class="chapter-num">06</div>
+    <div class="chapter-title">練習課題<br>&amp; 参考資料</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">📝</span>6-1. 練習課題</div>
+    <div class="exercise"><h4>入門課題 ⭐</h4><ol><li>明るく軽快なK-POPプロンプトを書いてみる</li><li>落ち着いたジャズプロンプトを書いてみる</li><li>ノリのいいEDMプロンプトを書いてみる</li></ol></div>
+    <div class="exercise"><h4>中級課題 ⭐⭐</h4><ol start="4"><li>2つのジャンルをミックスしたプロンプトを作る（例: Jazz + Hip-Hop）</li><li>構造タグを使った完全な歌詞を書く</li><li>特定のアーティストスタイルを参照したプロンプトを作る</li></ol></div>
+    <div class="exercise"><h4>上級課題 ⭐⭐⭐</h4><ol start="7"><li>映画のシーンに合うOSTを3曲作る（アクション、ロマンス、ホラー）</li><li>1つのテーマでジャンル別に5曲作る</li><li>自分だけのシグネチャープロンプトテンプレートを開発する</li></ol></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎓</span>6-2. おすすめ学習順序（4週間コース）</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>週</th><th>学習内容</th><th>目標</th></tr></thead>
+        <tbody class="week-row">
+          <tr><td>1週目</td><td>基本のジャンル別テンプレートで10曲作ってみる</td><td>プロンプト作成に慣れる</td></tr>
+          <tr><td>2週目</td><td>ジャンルミックス実験（5パターン）</td><td>創造的な組み合わせ力を養う</td></tr>
+          <tr><td>3週目</td><td>構造タグと歌詞を活用する</td><td>完成度の高い曲づくり</td></tr>
+          <tr><td>4週目</td><td>自分だけのシグネチャースタイルを見つける</td><td>独自の音楽スタイルを確立</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title"><span class="icon">🎉</span>6-3. おわりに</div>
+    <div class="box box-success">
+      <h4>おめでとうございます！これでAI作曲の基礎を完全に理解しました。🎉</h4>
+      <ul style="margin-top:16px;padding-left:18px;color:var(--text2);font-size:.9rem">
+        <li>✅ 最初から完璧はありません — 実験が大事！</li>
+        <li>✅ 他の人のプロンプトを参考にしてアレンジしましょう</li>
+        <li>✅ 失敗は学びのプロセスです</li>
+        <li>✅ 続ければすぐに上達します！</li>
+      </ul>
+      <p style="margin-top:20px;font-size:1rem;text-align:center;color:var(--accent2)">あなたのクリエイティブな音楽制作の旅を応援しています！🎵✨</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div style="font-size:2rem;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(192,132,252,.5))">🎵</div>
+  <p class="footer-title">2026 AI作曲プロンプトガイドブック</p>
+  <p style="margin-top:12px;font-size:.75rem;opacity:.4">© 2026 JUN先生 AIミュージックスクール</p>
+</div>
+
+</div><!-- /content-ja -->
+
+
+<script>
+function setLang(lang){
+  document.body.classList.toggle('ja', lang === 'ja');
+  document.documentElement.lang = lang;
+  document.title = lang === 'ja' ? '2026 AI作曲プロンプトガイドブック' : '2026 AI 작곡 프롬프트 가이드북';
+  document.getElementById('btn-ko').classList.toggle('active', lang === 'ko');
+  document.getElementById('btn-ja').classList.toggle('active', lang === 'ja');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+</script>
+
+</body>
+</html>

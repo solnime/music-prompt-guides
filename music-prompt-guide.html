@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>음악 프롬프트 가이드</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans KR", sans-serif;
+    background: #faf9f6;
+    color: #37352f;
+    min-height: 100vh;
+    padding: 48px 24px 64px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; position: relative; }
+
+  .lang-switch {
+    position: absolute; top: 0; right: 0;
+    display: flex; gap: 6px;
+  }
+  .lang-btn {
+    font-size: 20px; line-height: 1;
+    background: #fff;
+    border: 1px solid #dedcd6;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    opacity: 0.45;
+    transition: all .15s;
+  }
+  .lang-btn:hover { opacity: 0.8; }
+  .lang-btn.active {
+    opacity: 1;
+    border-color: #e2622b;
+    box-shadow: 0 0 0 2px rgba(226,98,43,0.15);
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fdeee4; color: #d4632a;
+    font-size: 13px; font-weight: 600;
+    padding: 6px 14px; border-radius: 999px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 42px; line-height: 1.25; font-weight: 800;
+    letter-spacing: -0.02em; margin-bottom: 14px;
+  }
+  h1 .accent { color: #e2622b; }
+  .subtitle { font-size: 15px; color: #787671; margin-bottom: 36px; }
+
+  .tip {
+    background: #eef4fb;
+    border-left: 4px solid #3b6fc4;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 14px; line-height: 1.8;
+    color: #35507a;
+    margin-bottom: 44px;
+  }
+  .tip .chip {
+    background: #fbe9c8; color: #8a5a10;
+    border-radius: 4px; padding: 1px 7px;
+    font-weight: 700; font-size: 13px;
+  }
+
+  .section-label {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+    color: #9b9a97; margin: 40px 0 16px;
+  }
+  .section-label::after { content: ""; flex: 1; height: 1px; background: #e8e6e1; }
+
+  .card {
+    background: #fff;
+    border: 1px solid #eceae5;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f5f4f0;
+    padding: 12px 18px;
+    border-bottom: 1px solid #eceae5;
+  }
+  .card-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.14em;
+    color: #6f6d68;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #e2622b; flex-shrink: 0; }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid #dedcd6; background: #fff;
+    color: #6f6d68; font-size: 12.5px; font-weight: 600;
+    padding: 6px 12px; border-radius: 7px; cursor: pointer;
+    transition: all .15s;
+  }
+  .copy-btn:hover { border-color: #e2622b; color: #e2622b; }
+  .copy-btn.copied { background: #e2622b; border-color: #e2622b; color: #fff; }
+  .card-body {
+    padding: 20px 22px;
+    font-size: 15px; line-height: 1.9;
+    white-space: pre-wrap;
+  }
+
+  .footer {
+    text-align: center; margin-top: 56px;
+    font-size: 12.5px; letter-spacing: 0.12em; color: #b8b6b1;
+  }
+  .footer .name { color: #e2622b; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lang-switch">
+    <button class="lang-btn active" id="btnKo" onclick="setLang('ko')" title="한국어">🇰🇷</button>
+    <button class="lang-btn" id="btnJa" onclick="setLang('ja')" title="日本語">🇯🇵</button>
+  </div>
+
+  <div class="badge" data-i18n="badge">♫ JUN쌤</div>
+  <h1 id="mainTitle"></h1>
+  <div class="subtitle" data-i18n="subtitle"></div>
+
+  <div class="tip" id="tipBox"></div>
+
+  <div class="section-label" data-i18n="sectionStep">STEP BY STEP</div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><span class="dot"></span><span data-i18n="step1Title"></span></div>
+      <button class="copy-btn" onclick="copyText(this, 'step1')" data-copy-btn>⧉ 복사</button>
+    </div>
+    <div class="card-body" id="step1" data-i18n="step1Body"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><span class="dot"></span><span data-i18n="step2Title"></span></div>
+      <button class="copy-btn" onclick="copyText(this, 'step2')" data-copy-btn>⧉ 복사</button>
+    </div>
+    <div class="card-body" id="step2" data-i18n="step2Body"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><span class="dot"></span><span data-i18n="step3Title"></span></div>
+      <button class="copy-btn" onclick="copyText(this, 'step3')" data-copy-btn>⧉ 복사</button>
+    </div>
+    <div class="card-body" id="step3" data-i18n="step3Body"></div>
+  </div>
+
+  <div class="section-label" data-i18n="sectionBonus">BONUS</div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><span class="dot"></span><span data-i18n="bonusTitle"></span></div>
+      <button class="copy-btn" onclick="copyText(this, 'bonus')" data-copy-btn>⧉ 복사</button>
+    </div>
+    <div class="card-body" id="bonus" data-i18n="bonusBody"></div>
+  </div>
+
+  <div class="footer" id="footerBox"></div>
+</div>
+
+<script>
+  const i18nTexts = {
+    ko: {
+      badge: '♫ JUN쌤',
+      titleHtml: '음악 <span class="accent">프롬프트</span><br>가이드',
+      subtitle: 'GPT로 SUNO 가사를 단계별로 만드는 방법이에요.',
+      tipHtml: '💡 프롬프트를 순서대로 사용하면 완성도 높은 가사를 만들 수 있어요.<br><span class="chip">빈칸</span> 에 원하는 내용을 채워서 사용하세요.',
+      sectionStep: 'STEP BY STEP',
+      sectionBonus: 'BONUS',
+      step1Title: 'STEP 01 · 제목 정하기',
+      step1Body: '나는 지금부터 가사를 쓸거야. 장르는 인디밴드 장르이고, 남녀간의 사랑 얘기를 쓸건데, 일단 제목부터 한국어로 10개 써줘',
+      step2Title: 'STEP 02 · 1절 가사 쓰기',
+      step2Body: "나는 '　　'가 마음에 들어. 이것에 대한 가사를 vers, prechorus, chorus 파트로 나눠서 1절만 써줘",
+      step3Title: 'STEP 03 · 전체 구성 완성',
+      step3Body: '자 이제 지금까지 쓴걸 토대로 구성을 짜서 가사를 써주는데, 1절부터 이 순서대로 써줘.\n\nvers1 - prechorus1 - chorus1 - vers2 - prechorus2 - chorus2 - bridge - chorus3\n\n이 순서대로 써줘',
+      bonusTitle: 'BONUS · 정리 프롬프트',
+      bonusBody: '바로 복사할 수 있는 깔끔한 텍스트 블록으로 만들어줘',
+      footerHtml: 'made with ♥ by <span class="name">JUN쌤</span>',
+      copyLabel: '⧉ 복사',
+      copiedLabel: '✓ 복사됨',
+      pageTitle: '음악 프롬프트 가이드'
+    },
+    ja: {
+      badge: '♫ JUN先生',
+      titleHtml: '音楽<span class="accent">プロンプト</span><br>ガイド',
+      subtitle: 'GPTでSUNOの歌詞をステップごとに作る方法です。',
+      tipHtml: '💡 プロンプトを順番に使うと、完成度の高い歌詞が作れます。<br><span class="chip">空欄</span> にお好きな内容を入れてお使いください。',
+      sectionStep: 'STEP BY STEP',
+      sectionBonus: 'BONUS',
+      step1Title: 'STEP 01 · タイトルを決める',
+      step1Body: '今から歌詞を書くよ。ジャンルはインディーバンドで、男女の恋愛の話を書きたい。まずはタイトルを日本語で10個書いて',
+      step2Title: 'STEP 02 · 1番の歌詞を書く',
+      step2Body: '私は「　　」が気に入ったよ。これについての歌詞を vers、prechorus、chorus のパートに分けて、1番だけ書いて',
+      step3Title: 'STEP 03 · 全体構成を完成させる',
+      step3Body: 'では、ここまで書いた内容をもとに構成を組んで歌詞を書いて。1番からこの順番で書いてね。\n\nvers1 - prechorus1 - chorus1 - vers2 - prechorus2 - chorus2 - bridge - chorus3\n\nこの順番で書いて',
+      bonusTitle: 'BONUS · 整理プロンプト',
+      bonusBody: 'すぐコピーできる、きれいなテキストブロックにまとめて',
+      footerHtml: 'made with ♥ by <span class="name">JUN先生</span>',
+      copyLabel: '⧉ コピー',
+      copiedLabel: '✓ コピー済み',
+      pageTitle: '音楽プロンプトガイド'
+    }
+  };
+
+  let currentLang = 'ko';
+
+  function setLang(lang) {
+    currentLang = lang;
+    const t = i18nTexts[lang];
+
+    document.documentElement.lang = lang;
+    document.title = t.pageTitle;
+
+    document.getElementById('mainTitle').innerHTML = t.titleHtml;
+    document.getElementById('tipBox').innerHTML = t.tipHtml;
+    document.getElementById('footerBox').innerHTML = t.footerHtml;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+
+    document.querySelectorAll('[data-copy-btn]').forEach(btn => {
+      if (!btn.classList.contains('copied')) btn.innerHTML = t.copyLabel;
+    });
+
+    document.getElementById('btnKo').classList.toggle('active', lang === 'ko');
+    document.getElementById('btnJa').classList.toggle('active', lang === 'ja');
+  }
+
+  function copyText(btnEl, targetId) {
+    const text = document.getElementById(targetId).innerText;
+    const t = i18nTexts[currentLang];
+    navigator.clipboard.writeText(text).then(() => {
+      btnEl.classList.add('copied');
+      btnEl.innerHTML = t.copiedLabel;
+      setTimeout(() => {
+        btnEl.classList.remove('copied');
+        btnEl.innerHTML = t.copyLabel;
+      }, 1500);
+    });
+  }
+
+  setLang('ko');
+</script>
+</body>
+</html>
